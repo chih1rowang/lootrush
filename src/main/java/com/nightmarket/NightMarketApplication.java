@@ -1,13 +1,13 @@
-package com.flash.mall;
+package com.nightmarket;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class FlashMallApplication {
+public class NightMarketApplication {
 
 	public static void main(String[] args) {
-		SpringApplication.run(FlashMallApplication.class, args);
+		SpringApplication.run(NightMarketApplication.class, args);
 	}
 
 }

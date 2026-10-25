@@ -1,4 +1,4 @@
-package com.flash.mall;
+package com.nightmarket;
 
 import java.sql.Connection;
 import javax.sql.DataSource;

@@ -8,10 +8,10 @@
 		<version>4.0.9</version>
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
-	<groupId>com.flash</groupId>
-	<artifactId>flash-mall</artifactId>
+	<groupId>com.nightmarket</groupId>
+	<artifactId>nightmarket</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>flash-mall</name>
+	<name>nightmarket</name>
 	<description/>
 	<url/>
 	<licenses>

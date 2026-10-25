@@ -1,6 +1,6 @@
 spring:
   application:
-    name: flash-mall
+    name: nightmarket
   datasource:
     url: jdbc:mysql://localhost:3308/mall?useSSL=false&serverTimezone=Asia/Shanghai&characterEncoding=utf8
     username: root

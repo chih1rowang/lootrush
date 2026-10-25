@@ -1,11 +1,11 @@
-# flash-mall 限时商城·抢购与抽卡后端
+# nightmarket 限时商城·抢购与抽卡后端
 
 模拟手游"限时商城"运营活动的后端系统：瞬时洪峰下库存不超发、资金与道具全程可对账。
 
 ## 目录结构
 
 ```
-flash-mall/
+nightmarket/
 ├── src/                  # Java 代码（业务逻辑都在这里）
 ├── deploy/               # 中间件启动配置（docker compose 一键起全家）
 ├── docs/PRD.md           # 项目总文档（PRD v2.0，一切以它为准）
@@ -23,7 +23,7 @@ flash-mall/
    docker compose up -d
    docker ps   # 应看到 8 个容器状态 Up
    ```
-2. 用 IDEA 打开 flash-mall 文件夹，等右下角依赖下载完，点绿色三角运行。
+2. 用 IDEA 打开 nightmarket 文件夹，等右下角依赖下载完，点绿色三角运行。
 3. 验证：浏览器打开 http://localhost:8080/ping 看到 pong。
 
 ## 观测系统入口
@@ -40,7 +40,7 @@ flash-mall/
 
 | 端口 | 用途 | 备注 |
 |---|---|---|
-| 8080 | flash-mall 程序本身 | 曾被 gateflow-conductor 占用，已停（见 incidents/003） |
+| 8080 | nightmarket 程序本身 | 曾被 gateflow-conductor 占用，已停（见 incidents/003） |
 | 3308 | 商城 MySQL | 3306/3307 被旧项目占用，见 incidents/001 |
 | 6379 | Redis | |
 | 9876 / 10911 | RocketMQ 登记 / 仓库 | |
