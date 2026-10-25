@@ -39,14 +39,14 @@ flash-mall/
 
 | 端口 | 用途 | 备注 |
 |---|---|---|
-| 8080 | flash-mall 程序本身 | |
+| 8080 | flash-mall 程序本身 | 曾被 gateflow-conductor 占用，已停（见 incidents/003） |
 | 3308 | 商城 MySQL | 3306/3307 被旧项目占用，见 incidents/001 |
 | 6379 | Redis | |
 | 9876 / 10911 | RocketMQ 登记 / 仓库 | |
 | 8180 | RocketMQ 控制台 | 镜像内部端口是 8082，见 incidents/001 |
 | 9411 | Zipkin | |
 | 9090 / 3000 | Prometheus / Grafana | |
-| 18080 / 8888 / 3306 / 3307 | 旧项目（student-course、gateflow） | 别动 |
+| 18080 / 8888 / 3306 / 3307 / 5000 | 旧项目（student-course、gateflow） | 别动；conductor 已停，复活用 docker start gateflow-conductor |
 
 ## 规矩（写给未来的自己）
 
