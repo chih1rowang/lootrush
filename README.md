@@ -8,6 +8,7 @@
 flash-mall/
 ├── src/                  # Java 代码（业务逻辑都在这里）
 ├── deploy/               # 中间件启动配置（docker compose 一键起全家）
+├── docs/PRD.md           # 项目总文档（PRD v2.0，一切以它为准）
 ├── docs/guides/          # 人话导览文档
 ├── docs/incidents/       # 事故报告（重大 bug 的发现、排查、修复记录）
 ├── pom.xml               # 项目零件清单
