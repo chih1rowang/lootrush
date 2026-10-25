@@ -35,6 +35,19 @@ flash-mall/
 | 监控曲线（Grafana） | http://localhost:3000（admin/admin） |
 | 消息队列控制台 | http://localhost:8180 |
 
+## 本项目端口登记表（防止项目间互相踩踏）
+
+| 端口 | 用途 | 备注 |
+|---|---|---|
+| 8080 | flash-mall 程序本身 | |
+| 3308 | 商城 MySQL | 3306/3307 被旧项目占用，见 incidents/001 |
+| 6379 | Redis | |
+| 9876 / 10911 | RocketMQ 登记 / 仓库 | |
+| 8180 | RocketMQ 控制台 | 镜像内部端口是 8082，见 incidents/001 |
+| 9411 | Zipkin | |
+| 9090 / 3000 | Prometheus / Grafana | |
+| 18080 / 8888 / 3306 / 3307 | 旧项目（student-course、gateflow） | 别动 |
+
 ## 规矩（写给未来的自己）
 
 - 每个重大 bug：照 `docs/incidents/000-事故报告模板.md` 写报告，编号递增。

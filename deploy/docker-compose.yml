@@ -7,7 +7,7 @@ services:
       MYSQL_DATABASE: mall
       TZ: Asia/Shanghai
     ports:
-      - "3306:3306"
+      - "3308:3306"
     volumes:
       - mysql-data:/var/lib/mysql
     command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
@@ -44,7 +44,7 @@ services:
     image: apacherocketmq/rocketmq-dashboard:latest
     container_name: mall-mq-dashboard
     ports:
-      - "8180:8080"
+      - "8180:8082"
     environment:
       JAVA_OPTS: "-Drocketmq.namesrv.addr=mall-namesrv:9876"
     depends_on:
