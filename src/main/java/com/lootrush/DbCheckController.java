@@ -1,4 +1,4 @@
-package com.nightmarket;
+package com.lootrush;
 
 import java.sql.Connection;
 import javax.sql.DataSource;

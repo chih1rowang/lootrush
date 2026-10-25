@@ -1,4 +1,4 @@
-package com.nightmarket.config;
+package com.lootrush.config;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;

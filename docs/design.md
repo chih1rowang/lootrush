@@ -1,4 +1,4 @@
-# NightMarket 系统设计 v1.0
+# LootRush 系统设计 v1.0
 
 > 依据《PRD v2.0》。本文档定义：进程与模块、数据库 13 表、Redis 键、消息主题、
 > 接口清单 25 个、鉴权、订单状态机、接口文档方案、"不拆微服务"的取舍论证。
@@ -11,7 +11,7 @@
 └───────┬─────────┘   └─────┬──────┘
         ▼                   ▼
 ┌─────────────────────────────────────┐     ┌──────────────────────┐
-│  nightmarket-backend :8080          │     │  mock-payment :18090 │
+│  lootrush-backend :8080          │     │  mock-payment :18090 │
 │  ┌ user ─ goods ─ trade ─ gacha ─┐  │回调 │  假支付公司(独立进程) │
 │  │ rank ─ reconciliation ─ admin │◄┼─────┤  · 支付确认页         │
 │  └───────────┬───────────────────┘  │验签 │  · 三作恶开关        │
@@ -30,7 +30,7 @@
 ## 二、模块划分（包结构）
 
 ```
-com.nightmarket
+com.lootrush
 ├── config/            # Zipkin、MyBatis、Redis、鉴权拦截器等配置
 ├── common/            # 统一响应体、业务异常、枚举、工具
 ├── user/              # 注册登录、JWT、钱包（钻石余额与流水）
@@ -43,7 +43,7 @@ com.nightmarket
 └── admin/             # 管理端聚合接口（X-Admin-Token 鉴权）
 ```
 
-## 三、数据库设计（库 nightmarket，共 13 张）
+## 三、数据库设计（库 lootrush，共 13 张）
 
 通用规范：id BIGINT 自增主键；业务表带 create_time/update_time；
 **流水表只增不改**（无 update_time）——审计铁律。

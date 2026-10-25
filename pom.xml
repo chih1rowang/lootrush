@@ -8,10 +8,10 @@
 		<version>4.0.9</version>
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
-	<groupId>com.nightmarket</groupId>
-	<artifactId>nightmarket</artifactId>
+	<groupId>com.lootrush</groupId>
+	<artifactId>lootrush</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>nightmarket</name>
+	<name>lootrush</name>
 	<description/>
 	<url/>
 	<licenses>

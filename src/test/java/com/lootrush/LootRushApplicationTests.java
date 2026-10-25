@@ -1,10 +1,10 @@
-package com.nightmarket;
+package com.lootrush;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
-class NightMarketApplicationTests {
+class LootRushApplicationTests {
 
 	@Test
 	void contextLoads() {
