@@ -2,7 +2,7 @@ spring:
   application:
     name: lootrush
   datasource:
-    url: jdbc:mysql://localhost:3308/mall?useSSL=false&serverTimezone=Asia/Shanghai&characterEncoding=utf8
+    url: jdbc:mysql://localhost:3308/lootrush?useSSL=false&serverTimezone=Asia/Shanghai&characterEncoding=utf8
     username: root
     password: "123456"
     driver-class-name: com.mysql.cj.jdbc.Driver
@@ -32,3 +32,8 @@ management:
 
 server:
   port: 8080
+
+jwt:
+  secret: lootrush-dev-secret-0123456789abcdef0123456789
+  expire-minutes: 720
+

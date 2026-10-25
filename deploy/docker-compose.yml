@@ -4,7 +4,7 @@ services:
     container_name: mall-mysql
     environment:
       MYSQL_ROOT_PASSWORD: "123456"
-      MYSQL_DATABASE: mall
+      MYSQL_DATABASE: lootrush
       TZ: Asia/Shanghai
     ports:
       - "3308:3306"
