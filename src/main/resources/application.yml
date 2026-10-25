@@ -37,3 +37,8 @@ jwt:
   secret: lootrush-dev-secret-0123456789abcdef0123456789
   expire-minutes: 720
 
+admin:
+  password: admin123
+  token: lootrush-admin-token-2026
+
+
