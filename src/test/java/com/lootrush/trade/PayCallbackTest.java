@@ -24,8 +24,11 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /**
  * 循环4 测试：支付回调的幂等三件套与验签。
  * 直接以服务层为对象（模拟假支付公司发来的各种通知）。
+ * @Transactional 回滚测试数据——本测试曾经没有它：昨天跑完的数据留在库里，
+ * 今天第二跑撞上自己昨天留下的通知号，全部走了"重复忽略"捷径，集体假绿变红。
  */
 @SpringBootTest
+@Transactional
 class PayCallbackTest {
 
     @Autowired PayService payService;

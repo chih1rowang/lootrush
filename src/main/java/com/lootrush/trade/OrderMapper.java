@@ -28,6 +28,10 @@ public interface OrderMapper {
     @Update("UPDATE order_info SET status = 1 WHERE order_no = #{orderNo} AND status = 0")
     int markPaidIfCreated(@Param("orderNo") String orderNo);
 
+    /** 状态机守卫：只有已支付(1)→已发货(2)一条边可走；重复发货消息影响0行 */
+    @Update("UPDATE order_info SET status = 2 WHERE order_no = #{orderNo} AND status = 1")
+    int markDeliveredIfPaid(@Param("orderNo") String orderNo);
+
     /** 测试清理用 */
     @Delete("DELETE FROM order_info WHERE user_id = #{userId}")
     int deleteByUserId(@Param("userId") Long userId);

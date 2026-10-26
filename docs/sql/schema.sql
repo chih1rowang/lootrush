@@ -81,3 +81,25 @@ CREATE TABLE IF NOT EXISTS `wallet_flow` (
   PRIMARY KEY (`id`),
   KEY `idx_user` (`user_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='钱包流水:对账数据源';
+
+-- 循环5：背包 + 发货记录
+CREATE TABLE IF NOT EXISTS `bag` (
+  `id`          BIGINT   NOT NULL AUTO_INCREMENT,
+  `user_id`     BIGINT   NOT NULL,
+  `item_id`     BIGINT   NOT NULL,
+  `count`       INT      NOT NULL DEFAULT 0 COMMENT '数量堆叠',
+  `update_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_user_item` (`user_id`, `item_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='背包';
+
+CREATE TABLE IF NOT EXISTS `deliver_flow` (
+  `id`          BIGINT      NOT NULL AUTO_INCREMENT,
+  `order_no`    VARCHAR(40) NOT NULL COMMENT '一单只发一次的幂等锚点',
+  `user_id`     BIGINT      NOT NULL,
+  `item_id`     BIGINT      NOT NULL,
+  `qty`         INT         NOT NULL,
+  `create_time` DATETIME    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_order` (`order_no`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='发货记录(只增不改)';

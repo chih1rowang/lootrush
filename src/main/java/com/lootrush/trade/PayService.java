@@ -2,6 +2,7 @@ package com.lootrush.trade;
 
 import com.lootrush.common.ApiResponse;
 import com.lootrush.common.BizException;
+import com.lootrush.goods.GoodsMapper;
 import com.lootrush.user.UserMapper;
 import com.lootrush.user.WalletFlowEntity;
 import com.lootrush.user.WalletFlowMapper;
@@ -9,8 +10,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DuplicateKeyException;
+import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
+import org.apache.rocketmq.spring.core.RocketMQTemplate;
+import tools.jackson.databind.ObjectMapper;
 
 /**
  * 支付回调处理（技术总表场景8/9 的核心）：验签 → 记通知账 → 幂等 → 状态机 → 钱包事务。
@@ -38,15 +44,21 @@ public class PayService {
     private final PayNotifyLogMapper notifyMapper;
     private final UserMapper userMapper;
     private final WalletFlowMapper walletFlowMapper;
+    private final GoodsMapper goodsMapper;
+    private final RocketMQTemplate mqTemplate;
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     public PayService(@Value("${pay.secret}") String paySecret,
                       OrderMapper orderMapper, PayNotifyLogMapper notifyMapper,
-                      UserMapper userMapper, WalletFlowMapper walletFlowMapper) {
+                      UserMapper userMapper, WalletFlowMapper walletFlowMapper,
+                      GoodsMapper goodsMapper, RocketMQTemplate mqTemplate) {
         this.paySecret = paySecret;
         this.orderMapper = orderMapper;
         this.notifyMapper = notifyMapper;
         this.userMapper = userMapper;
         this.walletFlowMapper = walletFlowMapper;
+        this.goodsMapper = goodsMapper;
+        this.mqTemplate = mqTemplate;
     }
 
     /** 回调请求体（支付公司 POST 过来的） */
@@ -107,11 +119,40 @@ public class PayService {
                 throw BizException.of(400, "钻石余额不足，无法完成支付");
             }
             writeFlow(order.getUserId(), "PURCHASE", -order.getPriceDiamond(), order.getOrderNo());
+            scheduleDeliveryAfterCommit(order);
         }
 
         notifyMapper.updateResult(req.notifyNo(), RESULT_PROCESSED);
         log.info("回调处理成功 orderNo={} type={} amount={}", req.orderNo(), order.getType(), req.amount());
         return ApiResponse.ok();
+    }
+
+    /**
+     * 发货消息必须在【本事务成功提交之后】才发出去。
+     * 若在事务内先发：消息发完、事务却回滚 → 消费者会为一笔"没付成功"的订单发货。
+     * 注册 afterCommit 回调：提交后才发；万一发送失败（网络），支付已安全落地，
+     * 发货缺口交给对账循环兜底——这就是"事务性发件箱"思想的朴素实现。
+     */
+    private void scheduleDeliveryAfterCommit(OrderEntity order) {
+        Long itemId = goodsMapper.selectById(order.getGoodsId()).getItemId();
+        String json;
+        try {
+            json = objectMapper.writeValueAsString(
+                    new DeliverMsg(order.getOrderNo(), order.getUserId(), itemId, 1));
+        } catch (Exception e) {
+            throw new IllegalStateException("发货消息序列化失败", e);
+        }
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+                try {
+                    mqTemplate.syncSend(DeliverMsg.TOPIC, MessageBuilder.withPayload(json).build());
+                    log.info("发货消息已发送 orderNo={}", order.getOrderNo());
+                } catch (Exception e) {
+                    log.error("发货消息发送失败（对账循环会兜底） orderNo={}", order.getOrderNo(), e);
+                }
+            }
+        });
     }
 
     private void writeFlow(Long userId, String type, int amount, String orderNo) {
