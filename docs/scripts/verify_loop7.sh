@@ -5,6 +5,10 @@
 
 BASE=http://localhost:8080
 
+echo "== 0. 环境自检 =="
+curl -s -m 3 $BASE/ping > /dev/null 2>&1 || { echo "主程序(8080)未运行——请先在 IDEA 启动，退出"; exit 1; }
+echo "   主程序在线"
+
 echo "== 1. 登录运营与玩家 =="
 ADMIN_TOKEN=$(curl -s -X POST $BASE/api/admin/login -H "Content-Type: application/json" -d '{"password":"admin123"}' | grep -oE '"token":"[^"]+"' | cut -d'"' -f4)
 curl -s -X POST $BASE/api/auth/register -H "Content-Type: application/json" -d '{"username":"player1","password":"pass123"}' > /dev/null
