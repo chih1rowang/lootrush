@@ -57,3 +57,27 @@ CREATE TABLE IF NOT EXISTS `order_info` (
   UNIQUE KEY `uk_user_goods_active` (`user_id`, `goods_id`, `active_flag`),
   KEY `idx_user` (`user_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='订单表';
+
+-- 循环4：支付通知日志（只增不改）+ 钱包流水（只增不改）
+CREATE TABLE IF NOT EXISTS `pay_notify_log` (
+  `id`          BIGINT      NOT NULL AUTO_INCREMENT,
+  `notify_no`   VARCHAR(64) NOT NULL COMMENT '支付公司生成的通知唯一号',
+  `order_no`    VARCHAR(40) NOT NULL,
+  `amount`      INT         NOT NULL,
+  `result`      VARCHAR(30) NOT NULL COMMENT 'PENDING/PROCESSED/DUP_NOTIFY/DUP_STATE/BAD_SIGN/AMOUNT_MISMATCH/NO_ORDER/NO_BALANCE',
+  `create_time` DATETIME    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_notify_no` (`notify_no`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='支付通知日志:重发N次只处理1次的证据';
+
+CREATE TABLE IF NOT EXISTS `wallet_flow` (
+  `id`            BIGINT      NOT NULL AUTO_INCREMENT,
+  `user_id`       BIGINT      NOT NULL,
+  `change_type`   VARCHAR(20) NOT NULL COMMENT 'RECHARGE/PURCHASE/GACHA',
+  `amount`        INT         NOT NULL COMMENT '带符号变动量',
+  `balance_after` INT         NOT NULL COMMENT '变动后余额',
+  `ref_order_no`  VARCHAR(40) NOT NULL,
+  `create_time`   DATETIME    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_user` (`user_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='钱包流水:对账数据源';

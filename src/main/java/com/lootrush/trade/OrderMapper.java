@@ -6,6 +6,7 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Options;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
+import org.apache.ibatis.annotations.Update;
 
 import java.util.List;
 
@@ -22,6 +23,10 @@ public interface OrderMapper {
 
     @Select("SELECT * FROM order_info WHERE user_id = #{userId} ORDER BY create_time DESC")
     List<OrderEntity> selectByUser(@Param("userId") Long userId);
+
+    /** 状态机守卫：只有待支付(0)→已支付(1)一条边可走；重复回调影响0行 */
+    @Update("UPDATE order_info SET status = 1 WHERE order_no = #{orderNo} AND status = 0")
+    int markPaidIfCreated(@Param("orderNo") String orderNo);
 
     /** 测试清理用 */
     @Delete("DELETE FROM order_info WHERE user_id = #{userId}")

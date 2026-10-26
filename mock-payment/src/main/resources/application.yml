@@ -1,0 +1,7 @@
+server:
+  port: 18090
+
+pay:
+  # 与 LootRush 主系统共享的 HMAC 密钥（真实世界里它通过线下/配置中心安全分发）
+  secret: lootrush-pay-hmac-secret-2026-0912
+  callback-url: http://localhost:8080/api/pay/callback

@@ -47,4 +47,9 @@ rocketmq:
     group: lootrush-producer
     send-message-timeout: 5000
 
+pay:
+  secret: lootrush-pay-hmac-secret-2026-0912
+mock-pay:
+  base-url: http://localhost:18090
+
 
