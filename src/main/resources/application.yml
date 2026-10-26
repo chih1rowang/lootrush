@@ -52,4 +52,13 @@ pay:
 mock-pay:
   base-url: http://localhost:18090
 
+order:
+  # 开源RocketMQ延迟消息为固定档位（1s..10m/20m/30m/1h/2h），无15分钟档：
+  # 级别15=20分钟，作为关单延迟的默认值；验收时可用环境变量注入小档位（如3=10秒）
+  close-delay-level: ${ORDER_CLOSE_DELAY_LEVEL:15}
+  # 超过该分钟数仍未支付的订单由扫表兜底关闭（与延迟消息双保险）
+  close-minutes: ${ORDER_CLOSE_MINUTES:20}
+  # 扫表兜底轮询间隔（秒）
+  close-scan-seconds: ${ORDER_CLOSE_SCAN_SECONDS:60}
+
 

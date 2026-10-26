@@ -4,9 +4,12 @@ import org.apache.rocketmq.spring.annotation.RocketMQMessageListener;
 import org.apache.rocketmq.spring.core.RocketMQListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DuplicateKeyException;
+import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
+import org.apache.rocketmq.spring.core.RocketMQTemplate;
 import tools.jackson.databind.ObjectMapper;
 
 /**
@@ -27,11 +30,18 @@ public class OrderCreatedListener implements RocketMQListener<String> {
 
     private final OrderMapper orderMapper;
     private final PurchaseService purchaseService;
+    private final RocketMQTemplate mqTemplate;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    public OrderCreatedListener(OrderMapper orderMapper, PurchaseService purchaseService) {
+    /** 关单延迟级别：开源RocketMQ固定档位，15=20分钟（无15分钟档）。测试/验收可注入小档位 */
+    @Value("${order.close-delay-level:15}")
+    private int closeDelayLevel;
+
+    public OrderCreatedListener(OrderMapper orderMapper, PurchaseService purchaseService,
+                                RocketMQTemplate mqTemplate) {
         this.orderMapper = orderMapper;
         this.purchaseService = purchaseService;
+        this.mqTemplate = mqTemplate;
     }
 
     @Override
@@ -55,6 +65,7 @@ public class OrderCreatedListener implements RocketMQListener<String> {
             order.setActiveFlag(1L); // 活跃标记=1；唯一约束按(user,goods,1)拦第二张活跃单，关单置NULL放行
             orderMapper.insert(order);
             log.info("订单已落库 orderNo={} userId={}", msg.orderNo(), msg.userId());
+            scheduleDelayedClose(msg.orderNo());
         } catch (DuplicateKeyException e) {
             String m = String.valueOf(e.getMessage());
             if (m.contains("uk_order_no")) {
@@ -65,6 +76,22 @@ public class OrderCreatedListener implements RocketMQListener<String> {
             } else {
                 log.error("订单插入唯一键冲突，未识别类型 orderNo={}", msg.orderNo(), e);
             }
+        }
+    }
+
+    /**
+     * 建单成功后埋"延迟关单的定时炸弹"：一条 ORDER_CLOSE_DELAY 延迟消息，
+     * 到期（默认20分钟）才会被消费者收到——到点时订单若仍待支付则关单回补库存，
+     * 已付款则被状态机守卫挡下（空转）。
+     * 发送失败不回滚订单：扫表兜底任务会接力。
+     */
+    private void scheduleDelayedClose(String orderNo) {
+        try {
+            mqTemplate.syncSend(OrderCloseService.TOPIC_ORDER_CLOSE_DELAY,
+                    MessageBuilder.withPayload(orderNo).build(), 3000, closeDelayLevel);
+            log.info("延迟关单消息已埋下 orderNo={} 延迟级别={}", orderNo, closeDelayLevel);
+        } catch (Exception e) {
+            log.error("延迟关单消息发送失败（扫表兜底会接力） orderNo={}", orderNo, e);
         }
     }
 }

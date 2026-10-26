@@ -32,6 +32,14 @@ public interface OrderMapper {
     @Update("UPDATE order_info SET status = 2 WHERE order_no = #{orderNo} AND status = 1")
     int markDeliveredIfPaid(@Param("orderNo") String orderNo);
 
+    /** 状态机守卫：只有待支付(0)→已关闭(3)一条边可走，同时释放限购（active_flag置NULL） */
+    @Update("UPDATE order_info SET status = 3, active_flag = NULL WHERE order_no = #{orderNo} AND status = 0")
+    int markClosedIfCreated(@Param("orderNo") String orderNo);
+
+    /** 扫表兜底：找出超时未付的订单（分批，每轮最多100张） */
+    @Select("SELECT * FROM order_info WHERE status = 0 AND create_time < #{cutoff} ORDER BY id LIMIT 100")
+    List<OrderEntity> selectExpiredUnpaid(@Param("cutoff") java.time.LocalDateTime cutoff);
+
     /** 测试清理用 */
     @Delete("DELETE FROM order_info WHERE user_id = #{userId}")
     int deleteByUserId(@Param("userId") Long userId);

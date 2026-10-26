@@ -103,3 +103,15 @@ CREATE TABLE IF NOT EXISTS `deliver_flow` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `uk_order` (`order_no`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='发货记录(只增不改)';
+
+-- 循环6：库存流水
+CREATE TABLE IF NOT EXISTS `stock_flow` (
+  `id`           BIGINT      NOT NULL AUTO_INCREMENT,
+  `goods_id`     BIGINT      NOT NULL,
+  `change_count` INT         NOT NULL COMMENT '带符号变动：售出-1/回补+1',
+  `reason`       VARCHAR(20) NOT NULL COMMENT 'SALE/CLOSE_BACK/RECONCILE',
+  `order_no`     VARCHAR(40) NOT NULL,
+  `create_time`  DATETIME    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_goods` (`goods_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='库存流水(只增不改):对账库存核对数据源';
