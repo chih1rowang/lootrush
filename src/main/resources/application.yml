@@ -41,4 +41,10 @@ admin:
   password: admin123
   token: lootrush-admin-token-2026
 
+rocketmq:
+  name-server: localhost:9876
+  producer:
+    group: lootrush-producer
+    send-message-timeout: 5000
+
 

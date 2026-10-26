@@ -37,3 +37,23 @@ CREATE TABLE IF NOT EXISTS `goods` (
   PRIMARY KEY (`id`),
   KEY `idx_sale_time` (`sale_start_time`, `sale_end_time`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='贩售商品(四态由时间+库存推导,不落库)';
+
+-- 循环3：订单表。限购铁闸：UNIQUE(user_id, goods_id, active_flag)——
+-- 订单活跃时 active_flag=1（同用户同商品只能有一张活跃单），关单时置 NULL（放行再抢）。
+-- MySQL 唯一索引不约束 NULL，一条索引同时实现"活跃期唯一+关闭后放行"。
+CREATE TABLE IF NOT EXISTS `order_info` (
+  `id`            BIGINT      NOT NULL AUTO_INCREMENT,
+  `order_no`      VARCHAR(40) NOT NULL COMMENT '订单号(全局唯一)',
+  `type`          VARCHAR(10) NOT NULL DEFAULT 'PURCHASE' COMMENT 'PURCHASE购买/RECHARGE充值',
+  `user_id`       BIGINT      NOT NULL,
+  `goods_id`      BIGINT      NOT NULL,
+  `price_diamond` INT         NOT NULL,
+  `status`        TINYINT     NOT NULL DEFAULT 0 COMMENT '0待支付/1已支付/2已发货/3已关闭',
+  `active_flag`   BIGINT      NULL COMMENT '活跃订单=order_no;关单置NULL',
+  `create_time`   DATETIME    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `update_time`   DATETIME    NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_order_no` (`order_no`),
+  UNIQUE KEY `uk_user_goods_active` (`user_id`, `goods_id`, `active_flag`),
+  KEY `idx_user` (`user_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='订单表';
