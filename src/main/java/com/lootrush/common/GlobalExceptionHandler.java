@@ -2,6 +2,7 @@ package com.lootrush.common;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -25,6 +26,14 @@ public class GlobalExceptionHandler {
                 ? "参数不合法"
                 : e.getBindingResult().getFieldErrors().get(0).getDefaultMessage();
         return ApiResponse.error(400, msg);
+    }
+
+    /** 请求体读不懂：不是合法JSON，或编码不是UTF-8（Windows命令行发中文会踩）。
+     *  这是客户端的错，按规范返回400而不是500，并把原因说人话。 */
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ApiResponse<Void> unreadableBody(HttpMessageNotReadableException e) {
+        log.warn("请求体解析失败: {}", e.getMessage());
+        return ApiResponse.error(400, "请求体不是合法的UTF-8编码JSON（中文需UTF-8，Windows命令行注意编码）");
     }
 
     /** 兜底：未知异常只给用户一句话，完整堆栈进日志（不泄露内部细节） */
