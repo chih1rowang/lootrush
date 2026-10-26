@@ -27,18 +27,19 @@ echo "== 6. 差异报表（应出现 STOCK_MISMATCH / GOODS:96, status=FIXED）=
 curl -s $BASE/api/admin/recon/diffs -H "X-Admin-Token: $ADMIN_TOKEN" | head -c 500; echo
 
 echo "== 7. 构造第二类差异：已支付未发货（模拟发货消息丢失）=="
-docker exec mall-mysql mysql -uroot -p123456 lootrush -e "INSERT IGNORE INTO order_info(order_no,type,user_id,goods_id,price_diamond,status,active_flag) VALUES('RECONGAP1','PURCHASE',5,96,30,1,NULL);" 2>/dev/null
-echo "   缺口订单 RECONGAP1 已注入（已支付、无发货记录）"
+GAP_NO="RECONGAP$(date +%s)"
+docker exec mall-mysql mysql -uroot -p123456 lootrush -e "INSERT IGNORE INTO order_info(order_no,type,user_id,goods_id,price_diamond,status,active_flag) VALUES('$GAP_NO','PURCHASE',5,96,30,1,NULL);" 2>/dev/null
+echo "   缺口订单 $GAP_NO 已注入（已支付、无发货记录）"
 curl -s -X POST $BASE/api/admin/recon/run -H "X-Admin-Token: $ADMIN_TOKEN"; echo
 echo "   等待重投的发货消息被消费者处理..."
 sleep 6
 
 echo "== 8. 验收点 =="
-echo "-- 8.1 发货流水（应出现 RECONGAP1，qty=1）--"
-docker exec mall-mysql mysql -uroot -p123456 lootrush -e "SELECT order_no,item_id,qty FROM deliver_flow WHERE order_no='RECONGAP1';" 2>/dev/null
-echo "-- 8.2 背包（Loop5Blade 的 count 应=2）--"
+echo "-- 8.1 发货流水（应出现 $GAP_NO，qty=1）--"
+docker exec mall-mysql mysql -uroot -p123456 lootrush -e "SELECT order_no,item_id,qty FROM deliver_flow WHERE order_no='$GAP_NO';" 2>/dev/null
+echo "-- 8.2 背包（Loop5Blade 的 count 应比上一轮 +1）--"
 curl -s $BASE/api/bag -H "Authorization: Bearer $TOKEN"; echo
 echo "-- 8.3 差异表（两类差异都应 FIXED）--"
-docker exec mall-mysql mysql -uroot -p123456 lootrush -e "SELECT diff_type,order_no,status,LEFT(detail,50) AS detail FROM recon_diff WHERE order_no IN ('GOODS:96','RECONGAP1');" 2>/dev/null
+docker exec mall-mysql mysql -uroot -p123456 lootrush -e "SELECT diff_type,order_no,status FROM recon_diff WHERE order_no IN ('GOODS:96','$GAP_NO');" 2>/dev/null
 
-echo "验收完成：5=expected、8.1有行、8.2 count=2、8.3两行FIXED → 循环7过"
+echo "验收完成：5=expected、8.1有行、8.2 count增加、8.3两行FIXED → 循环7过"
