@@ -14,4 +14,8 @@ public interface DeliverFlowMapper {
 
     @Select("SELECT * FROM deliver_flow WHERE order_no = #{orderNo}")
     DeliverFlowEntity selectByOrderNo(@Param("orderNo") String orderNo);
+
+    /** 测试清理用 */
+    @org.apache.ibatis.annotations.Delete("DELETE FROM deliver_flow WHERE order_no = #{orderNo}")
+    int deleteByOrderNo(@Param("orderNo") String orderNo);
 }

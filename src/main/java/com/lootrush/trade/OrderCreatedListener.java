@@ -30,6 +30,7 @@ public class OrderCreatedListener implements RocketMQListener<String> {
 
     private final OrderMapper orderMapper;
     private final PurchaseService purchaseService;
+    private final StockFlowMapper stockFlowMapper;
     private final RocketMQTemplate mqTemplate;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -38,9 +39,10 @@ public class OrderCreatedListener implements RocketMQListener<String> {
     private int closeDelayLevel;
 
     public OrderCreatedListener(OrderMapper orderMapper, PurchaseService purchaseService,
-                                RocketMQTemplate mqTemplate) {
+                                StockFlowMapper stockFlowMapper, RocketMQTemplate mqTemplate) {
         this.orderMapper = orderMapper;
         this.purchaseService = purchaseService;
+        this.stockFlowMapper = stockFlowMapper;
         this.mqTemplate = mqTemplate;
     }
 
@@ -64,7 +66,14 @@ public class OrderCreatedListener implements RocketMQListener<String> {
             order.setStatus(0);
             order.setActiveFlag(1L); // 活跃标记=1；唯一约束按(user,goods,1)拦第二张活跃单，关单置NULL放行
             orderMapper.insert(order);
-            log.info("订单已落库 orderNo={} userId={}", msg.orderNo(), msg.userId());
+            // 销售记账与订单落库同事务：库存流水账本必须完整，否则对账推导会出错（循环7）
+            StockFlowEntity sale = new StockFlowEntity();
+            sale.setGoodsId(msg.goodsId());
+            sale.setChangeCount(-1);
+            sale.setReason("SALE");
+            sale.setOrderNo(msg.orderNo());
+            stockFlowMapper.insert(sale);
+            log.info("订单已落库并记销售流水 orderNo={} userId={}", msg.orderNo(), msg.userId());
             scheduleDelayedClose(msg.orderNo());
         } catch (DuplicateKeyException e) {
             String m = String.valueOf(e.getMessage());
@@ -72,7 +81,7 @@ public class OrderCreatedListener implements RocketMQListener<String> {
                 log.warn("重复投递的消息，幂等忽略 orderNo={}", msg.orderNo());
             } else if (m.contains("uk_user_goods_active")) {
                 log.warn("数据库铁闸拦下越线者，补偿库存 userId={} goodsId={}", msg.userId(), msg.goodsId());
-                purchaseService.compensate(msg.goodsId(), msg.userId());
+                purchaseService.compensate(msg.goodsId(), msg.userId(), msg.orderNo());
             } else {
                 log.error("订单插入唯一键冲突，未识别类型 orderNo={}", msg.orderNo(), e);
             }

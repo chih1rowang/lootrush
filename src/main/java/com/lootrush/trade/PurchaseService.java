@@ -36,16 +36,18 @@ public class PurchaseService {
 
     private final GoodsMapper goodsMapper;
     private final OrderMapper orderMapper;
+    private final StockFlowMapper stockFlowMapper;
     private final StringRedisTemplate redis;
     private final RedisScript<Long> deductScript;
     private final RocketMQTemplate mqTemplate;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     public PurchaseService(GoodsMapper goodsMapper, OrderMapper orderMapper,
-                           StringRedisTemplate redis, RedisScript<Long> deductScript,
-                           RocketMQTemplate mqTemplate) {
+                           StockFlowMapper stockFlowMapper, StringRedisTemplate redis,
+                           RedisScript<Long> deductScript, RocketMQTemplate mqTemplate) {
         this.goodsMapper = goodsMapper;
         this.orderMapper = orderMapper;
+        this.stockFlowMapper = stockFlowMapper;
         this.redis = redis;
         this.deductScript = deductScript;
         this.mqTemplate = mqTemplate;
@@ -99,10 +101,16 @@ public class PurchaseService {
         return orderNo;
     }
 
-    /** 供消费者在"数据库铁闸拦下越线者"时做补偿 */
-    public void compensate(Long goodsId, Long userId) {
+    /** 供消费者在"数据库铁闸拦下越线者"时做补偿：回补库存+删判重+记补偿流水 */
+    public void compensate(Long goodsId, Long userId, String orderNo) {
         redis.opsForValue().increment(STOCK_KEY_PREFIX + goodsId);
         redis.delete(buyflagKey(goodsId, userId));
+        StockFlowEntity flow = new StockFlowEntity();
+        flow.setGoodsId(goodsId);
+        flow.setChangeCount(1);
+        flow.setReason("COMPENSATE");
+        flow.setOrderNo(orderNo);
+        stockFlowMapper.insert(flow);
     }
 
     public List<OrderEntity> myOrders(Long userId) {

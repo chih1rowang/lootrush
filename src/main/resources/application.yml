@@ -61,4 +61,8 @@ order:
   # 扫表兜底轮询间隔（秒）
   close-scan-seconds: ${ORDER_CLOSE_SCAN_SECONDS:60}
 
+recon:
+  # 每日对账时间（凌晨2点）；验收用管理端手动触发接口
+  cron: ${RECON_CRON:0 0 2 * * ?}
+
 

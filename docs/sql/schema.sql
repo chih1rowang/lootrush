@@ -109,9 +109,23 @@ CREATE TABLE IF NOT EXISTS `stock_flow` (
   `id`           BIGINT      NOT NULL AUTO_INCREMENT,
   `goods_id`     BIGINT      NOT NULL,
   `change_count` INT         NOT NULL COMMENT '带符号变动：售出-1/回补+1',
-  `reason`       VARCHAR(20) NOT NULL COMMENT 'SALE/CLOSE_BACK/RECONCILE',
+  `reason`       VARCHAR(20) NOT NULL COMMENT 'SALE/CLOSE_BACK/COMPENSATE/RECONCILE',
   `order_no`     VARCHAR(40) NOT NULL,
   `create_time`  DATETIME    NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   KEY `idx_goods` (`goods_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='库存流水(只增不改):对账库存核对数据源';
+
+-- 循环7：对账差异登记与修复闭环
+CREATE TABLE IF NOT EXISTS `recon_diff` (
+  `id`          BIGINT       NOT NULL AUTO_INCREMENT,
+  `recon_date`  DATE         NOT NULL,
+  `diff_type`   VARCHAR(30)  NOT NULL COMMENT 'STOCK_MISMATCH/DELIVER_GAP/DELIVER_WITHOUT_PAY',
+  `order_no`    VARCHAR(60)  NOT NULL COMMENT '差异定位:订单号或 GOODS:{商品id}',
+  `detail`      VARCHAR(500) NOT NULL,
+  `status`      VARCHAR(10)  NOT NULL DEFAULT 'NEW' COMMENT 'NEW待处理/FIXED已修复',
+  `create_time` DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `update_time` DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_type_ref` (`diff_type`, `order_no`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='对账差异登记(同一差异只登记一次)';

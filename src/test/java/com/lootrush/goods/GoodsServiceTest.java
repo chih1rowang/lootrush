@@ -73,11 +73,11 @@ class GoodsServiceTest {
         // 绕过服务层直接改库（模拟"缓存和库不一致"的窗口）
         goodsMapper.updatePrice(id, 999);
 
-        var cached = goodsService.listGoods().stream().filter(v -> v.id() == id).findFirst().orElseThrow(); // 第二次：应命中缓存，仍旧价
+        var cached = goodsService.listGoods().stream().filter(v -> v.id().equals(id)).findFirst().orElseThrow(); // 第二次：应命中缓存，仍旧价
         assertEquals(50, cached.priceDiamond(), "缓存命中期间应返回旧价");
 
         redis.delete(GoodsService.LIST_KEY); // 缓存失效
-        var fresh = goodsService.listGoods().stream().filter(v -> v.id() == id).findFirst().orElseThrow(); // 第三次：回源数据库
+        var fresh = goodsService.listGoods().stream().filter(v -> v.id().equals(id)).findFirst().orElseThrow(); // 第三次：回源数据库
         assertEquals(999, fresh.priceDiamond(), "缓存失效后应返回新价");
     }
 

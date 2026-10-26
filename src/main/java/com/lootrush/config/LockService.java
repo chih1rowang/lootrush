@@ -19,6 +19,7 @@ import java.util.UUID;
 public class LockService {
 
     public static final String ORDER_CLOSE_LOCK = "lock:order-close";
+    public static final String RECON_LOCK = "lock:recon";
 
     private final StringRedisTemplate redis;
     private final String instanceId = UUID.randomUUID().toString();
