@@ -61,7 +61,7 @@ class RankServiceTest {
 
         RankService.MeRank me = rankService.me(userId);
         assertNotNull(me.rank(), "真实消费后必须上榜");
-        assertEquals(1000, me.score(), "榜内分数应等于消费额");
+        assertEquals(1600, me.score(), "榜内分数应等于消费额（十连1600钻）");
         assertTrue(me.totalMembers() >= 1);
     }
 

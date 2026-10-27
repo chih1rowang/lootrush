@@ -44,6 +44,6 @@ BEFORE=$(curl -s $BASE/api/rank/me -H "Authorization: Bearer $TOKEN" | grep -oE 
 curl -s -X POST $BASE/api/gacha/draw -H "Content-Type: application/json" -H "Authorization: Bearer $TOKEN" -d '{"count":10}' > /dev/null
 AFTER=$(curl -s $BASE/api/rank/me -H "Authorization: Bearer $TOKEN" | grep -oE '"score":[0-9]+' | grep -oE '[0-9]+')
 echo "   抽卡前score=$BEFORE，抽卡后score=$AFTER"
-[ "$((AFTER-BEFORE))" = "1000" ] && echo "   实时计分验证通过" || echo "   计分异常！"
+[ "$((AFTER-BEFORE))" = "1600" ] && echo "   实时计分验证通过（十连1600钻）" || echo "   计分异常！"
 
 echo "验收判定：回填有数、ZCARD>=300000、4.1<0.2秒、实时+1000 → 循环9过"

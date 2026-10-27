@@ -16,12 +16,12 @@ curl -s -X POST $BASE/api/auth/register -H "Content-Type: application/json" -d '
 TOKEN=$(curl -s -X POST $BASE/api/auth/login -H "Content-Type: application/json" -d '{"username":"player1","password":"pass123"}' | grep -oE '"token":"[^"]+"' | cut -d'"' -f4)
 echo "   手环长度=${#TOKEN}"
 
-echo "== 2. 卡池公示（应见三档概率89%/10%/1%与保底进度）=="
+echo "== 2. 卡池公示（应见三档概率89%/10%/1%与本期/下期金装阵容、更新时间）=="
 curl -s $BASE/api/gacha/pool -H "Authorization: Bearer $TOKEN"; echo
 
-echo "== 3. 充值9000钻（9笔，走NORMAL即时回调）=="
+echo "== 3. 充值15000钻（抽90发需14400=90×160）=="
 curl -s -X POST $MOCK/mock-pay/switch?mode=NORMAL > /dev/null
-for i in $(seq 1 9); do
+for i in $(seq 1 15); do
   R=$(curl -s -X POST $BASE/api/pay/recharge -H "Content-Type: application/json" -H "Authorization: Bearer $TOKEN" -d '{"amount":1000}')
   RCNO=$(echo "$R" | grep -oE '"orderNo":"[^"]+"' | cut -d'"' -f4)
   curl -s -X POST "$MOCK/mock-pay/confirm?orderNo=$RCNO&amount=1000" > /dev/null

@@ -12,6 +12,7 @@ public class GoodsFlat {
     private String name;
     private String description;
     private String imageUrl;
+    private Integer rarity;
     private Integer priceDiamond;
     private Integer originalPrice;
     private Integer stockTotal;

@@ -19,7 +19,7 @@ public interface GoodsMapper {
 
     /** 商品+道具的联查结果（货架展示需要的所有列一次拿全） */
     @Select("SELECT g.id, g.item_id AS itemId, i.name, i.description, i.image_url AS imageUrl, " +
-            "g.price_diamond AS priceDiamond, g.original_price AS originalPrice, " +
+            "i.rarity, g.price_diamond AS priceDiamond, g.original_price AS originalPrice, " +
             "g.stock_total AS stockTotal, g.sale_start_time AS saleStartTime, g.sale_end_time AS saleEndTime " +
             "FROM goods g JOIN item i ON g.item_id = i.id " +
             "ORDER BY g.sale_start_time")

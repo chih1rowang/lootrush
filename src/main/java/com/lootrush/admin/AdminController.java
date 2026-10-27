@@ -3,6 +3,7 @@ package com.lootrush.admin;
 import com.lootrush.common.ApiResponse;
 import com.lootrush.common.BizException;
 import com.lootrush.goods.GoodsService;
+import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -47,11 +48,14 @@ public class AdminController {
         return ApiResponse.ok(Map.of("token", adminToken));
     }
 
-    /** 上架一件商品（时间用 ISO 格式，如 2026-10-26T20:00:00） */
+    /** 上架一件商品（时间用 ISO 格式，如 2026-10-26T20:00:00；稀有度1蓝/2紫，金色只能抽卡出） */
     public record CreateGoodsReq(
             @NotBlank(message = "商品名不能为空") String name,
             String description,
             String imageUrl,
+            @NotNull(message = "稀有度不能为空")
+            @Min(value = 1, message = "稀有度最低1") @Max(value = 2, message = "商城稀有度最高2，金色只能从卡池获得")
+            Integer rarity,
             @NotNull @Min(value = 1, message = "售价至少1钻石") Integer price,
             @NotNull Integer originalPrice,
             @NotNull @Min(value = 1, message = "库存至少1件") Integer stock,
@@ -62,7 +66,8 @@ public class AdminController {
     @PostMapping("/goods")
     public ApiResponse<Map<String, Long>> createGoods(@Validated @RequestBody CreateGoodsReq req) {
         Long id = goodsService.createGoods(req.name(), req.description(), req.imageUrl(),
-                req.price(), req.originalPrice(), req.stock(), req.saleStartTime(), req.saleEndTime());
+                req.rarity(), req.price(), req.originalPrice(), req.stock(),
+                req.saleStartTime(), req.saleEndTime());
         return ApiResponse.ok(Map.of("goodsId", id));
     }
 

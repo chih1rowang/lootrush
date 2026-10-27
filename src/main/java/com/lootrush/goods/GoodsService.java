@@ -41,16 +41,27 @@ public class GoodsService {
         this.redis = redis;
     }
 
-    /** 上架：建道具 + 建商品 + 库存预热进 Redis + 立刻作废货架缓存 */
+    /** 兼容旧签名：默认蓝色（1级） */
     public Long createGoods(String name, String description, String imageUrl,
                             int price, int originalPrice, int stock,
                             LocalDateTime saleStart, LocalDateTime saleEnd) {
+        return createGoods(name, description, imageUrl, 1, price, originalPrice, stock, saleStart, saleEnd);
+    }
+
+    /** 上架：建道具 + 建商品 + 库存预热进 Redis + 立刻作废货架缓存
+     *  商城稀有度只有两级（1蓝/2紫）；金色(3)只能从卡池获得（PRD决策#10） */
+    public Long createGoods(String name, String description, String imageUrl,
+                            int rarity, int price, int originalPrice, int stock,
+                            LocalDateTime saleStart, LocalDateTime saleEnd) {
+        if (rarity != 1 && rarity != 2) {
+            throw BizException.of(400, "商城稀有度只能是1(蓝)或2(紫)，最高级3只能从卡池获得");
+        }
         if (!saleStart.isBefore(saleEnd)) {
             throw BizException.of(400, "开售时间必须早于结束时间");
         }
         ItemEntity item = new ItemEntity();
         item.setName(name);
-        item.setRarity(1);
+        item.setRarity(rarity);
         item.setSourceType("SHOP");
         item.setDescription(description);
         item.setImageUrl(imageUrl);
@@ -132,7 +143,7 @@ public class GoodsService {
             countdownSec = Duration.between(now, f.getSaleEndTime()).getSeconds();
         }
         return new GoodsVO(f.getId(), f.getName(), f.getDescription(), f.getImageUrl(),
-                f.getPriceDiamond(), f.getOriginalPrice(), stockLeft, status, countdownSec);
+                f.getRarity(), f.getPriceDiamond(), f.getOriginalPrice(), stockLeft, status, countdownSec);
     }
 
     private List<GoodsVO> parseList(String json) {
@@ -155,7 +166,7 @@ public class GoodsService {
 
     /** 货架展示对象（record：不可变，字段即接口出参） */
     public record GoodsVO(Long id, String name, String description, String imageUrl,
-                          int priceDiamond, int originalPrice, long stockLeft,
+                          Integer rarity, int priceDiamond, int originalPrice, long stockLeft,
                           String status, Long countdownSec) {
     }
 }

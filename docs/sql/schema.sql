@@ -171,3 +171,23 @@ INSERT INTO item(name, rarity, source_type, description) SELECT '逐星者之刃
 INSERT INTO gacha_pool(item_id, rarity, weight) SELECT i.id, 1, 890 FROM item i WHERE i.name='星尘碎片' AND NOT EXISTS (SELECT 1 FROM gacha_pool p WHERE p.item_id=i.id);
 INSERT INTO gacha_pool(item_id, rarity, weight) SELECT i.id, 2, 100 FROM item i WHERE i.name='辉光结晶' AND NOT EXISTS (SELECT 1 FROM gacha_pool p WHERE p.item_id=i.id);
 INSERT INTO gacha_pool(item_id, rarity, weight) SELECT i.id, 3, 10 FROM item i WHERE i.name='逐星者之刃' AND NOT EXISTS (SELECT 1 FROM gacha_pool p WHERE p.item_id=i.id);
+
+-- 循环9D：金装每周轮换 + 商城两级稀有度
+CREATE TABLE IF NOT EXISTS `gacha_gold_item` (
+  `id`         BIGINT NOT NULL AUTO_INCREMENT,
+  `item_id`    BIGINT NOT NULL,
+  `slot_order` INT    NOT NULL COMMENT '轮换队列顺序（5个一组，按周轮换）',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_item` (`item_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='金装轮换队列';
+
+CREATE TABLE IF NOT EXISTS `gacha_rotation_state` (
+  `id`           TINYINT  NOT NULL,
+  `anchor_start` DATETIME NOT NULL COMMENT '轮换纪元起点（当前期=anchor+N*7天）',
+  `period_days`  INT      NOT NULL DEFAULT 7,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='轮换状态(单行)';
+
+-- 金装从基础卡池移出（金色只能抽卡获得，且按周轮换）：
+-- DELETE FROM gacha_pool WHERE item_id IN (SELECT item_id FROM gacha_gold_item);
+-- 商城道具种子（蓝/紫两级）：见试短剑/星纹护符/疾风之靴(蓝)、苍穹之翼碎片/龙鳞胸甲/幻月法环(紫)
