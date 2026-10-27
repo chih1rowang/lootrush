@@ -65,6 +65,10 @@ sql-trace:
   # MyBatis 拦截器的慢SQL阈值（毫秒）；压测时可注入 SQL_SLOW_MS=100 观察更多慢查询
   slow-ms: ${SQL_SLOW_MS:300}
 
+crypto:
+  # 敏感字段加解密密钥（AES-256，32字节原文或Base64）；生产应上KMS/配置中心
+  aes-key: ${CRYPTO_AES_KEY:lootrush-aes-key-2026-0912-32bit}
+
 recon:
   # 每日对账时间（凌晨2点）；验收用管理端手动触发接口
   cron: ${RECON_CRON:0 0 2 * * ?}

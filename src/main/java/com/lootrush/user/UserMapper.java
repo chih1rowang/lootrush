@@ -42,4 +42,8 @@ public interface UserMapper {
     /** 测试清理用 */
     @org.apache.ibatis.annotations.Delete("DELETE FROM user WHERE id = #{id}")
     int deleteByUserId(@Param("id") Long id);
+
+    /** 实名认证：参数用实体（敏感字段带注解），CryptoInterceptor 会自动加密后落库 */
+    @org.apache.ibatis.annotations.Update("UPDATE user SET real_name = #{realName}, id_card = #{idCard} WHERE id = #{id}")
+    int updateRealName(UserEntity user);
 }

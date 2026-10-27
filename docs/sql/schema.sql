@@ -6,11 +6,15 @@ CREATE TABLE IF NOT EXISTS `user` (
   `username`      VARCHAR(50)  NOT NULL COMMENT '用户名',
   `password_hash` VARCHAR(100) NOT NULL COMMENT '密码的BCrypt加盐哈希（绝不存明文）',
   `diamond`       INT          NOT NULL DEFAULT 1000 COMMENT '钻石余额（注册赠送1000）',
+  `real_name`     VARCHAR(300) NULL COMMENT '实名姓名（AES-GCM密文，enc:v1:前缀，循环9C）',
+  `id_card`       VARCHAR(300) NULL COMMENT '身份证号（AES-GCM密文，循环9C）',
   `create_time`   DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
   `update_time`   DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
   PRIMARY KEY (`id`),
   UNIQUE KEY `uk_username` (`username`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='用户表';
+-- 已有环境的升级语句（MySQL 8 不支持 ADD COLUMN IF NOT EXISTS，新环境直接用上面的建表语句）：
+-- ALTER TABLE user ADD COLUMN real_name VARCHAR(300) NULL, ADD COLUMN id_card VARCHAR(300) NULL;
 
 -- 循环2：道具字典 + 贩售商品
 CREATE TABLE IF NOT EXISTS `item` (

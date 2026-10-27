@@ -43,4 +43,33 @@ public class AuthService {
         }
         return jwtUtil.issue(u.getId());
     }
+
+    /** 实名认证：校验（姓名长度＋身份证校验位算法）后落库（落库前由插件自动加密） */
+    public void realname(Long userId, String realName, String idCard) {
+        if (realName == null || realName.length() < 2 || realName.length() > 20) {
+            throw com.lootrush.common.BizException.of(400, "姓名需2-20位");
+        }
+        if (!com.lootrush.common.IdCardUtil.isValid(idCard)) {
+            throw com.lootrush.common.BizException.of(400, "身份证号校验位不合法");
+        }
+        UserEntity u = new UserEntity();
+        u.setId(userId);
+        u.setRealName(realName);
+        u.setIdCard(idCard);
+        userMapper.updateRealName(u);
+    }
+
+    /** 脱敏后的实名信息（对外展示用：库里密文→内存明文→出参遮罩） */
+    public record RealNameView(String realNameMasked, String idCardMasked) {
+    }
+
+    public RealNameView realnameView(Long userId) {
+        UserEntity u = userMapper.selectById(userId);
+        if (u == null || u.getIdCard() == null) {
+            return new RealNameView(null, null);
+        }
+        return new RealNameView(
+                com.lootrush.common.MaskUtil.maskName(u.getRealName()),
+                com.lootrush.common.MaskUtil.maskIdCard(u.getIdCard()));
+    }
 }
