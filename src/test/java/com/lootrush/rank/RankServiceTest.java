@@ -70,20 +70,25 @@ class RankServiceTest {
         UserEntity a = authService.register("topa" + System.currentTimeMillis() % 1000000, "pass123");
         UserEntity b = authService.register("topb" + System.currentTimeMillis() % 1000000, "pass123");
         long botId = RankService.BOT_ID_BASE + 499; // 落在 @AfterEach 清理区间
-        rankService.addConsumptionNow(a.getId(), 300);
-        rankService.addConsumptionNow(b.getId(), 700);
-        rankService.addConsumptionNow(botId, 500);
+        // 分数刻意抬高到超过榜上可能存在的任何造数玩家（压测造数上限约5万），
+        // 保证三者占据真实前三——测试必须容忍"榜上已有30万真实数据"
+        rankService.addConsumptionNow(a.getId(), 60000);
+        rankService.addConsumptionNow(b.getId(), 80000);
+        rankService.addConsumptionNow(botId, 70000);
 
-        var top = rankService.top(10);
-        assertEquals(700, top.get(0).score(), "最高分应排第一");
-        assertEquals(b.getId(), top.get(0).userId(), "第一名应是700分的玩家");
+        var top = rankService.top(3);
+        assertEquals(3, top.size());
+        assertEquals(80000, top.get(0).score(), "最高分排第一");
+        assertEquals(b.getId(), top.get(0).userId());
+        assertEquals(botId, top.get(1).userId());
+        assertEquals(a.getId(), top.get(2).userId());
         // 全榜降序
         for (int i = 1; i < top.size(); i++) {
             assertTrue(top.get(i - 1).score() >= top.get(i).score(), "必须降序");
         }
         // 真实玩家名字补全、机器人走兜底名
-        assertTrue(top.stream().anyMatch(e -> e.name().startsWith("topb")));
-        assertTrue(top.stream().anyMatch(e -> e.name().startsWith("神秘玩家")));
+        assertTrue(top.get(0).name().startsWith("topb"), "真实玩家应显示注册名");
+        assertTrue(top.get(1).name().startsWith("神秘玩家"), "无档案的造数玩家走兜底名");
 
         // 清理
         redis.opsForZSet().remove(RankService.KEY, a.getId().toString(), b.getId().toString(), String.valueOf(botId));
@@ -93,15 +98,16 @@ class RankServiceTest {
     void me_rank_among_seeded_bots_is_correct() {
         UserEntity u = authService.register("meself" + System.currentTimeMillis() % 1000000, "pass123");
         userId = u.getId();
-        // 造 100 个机器人（分数 50~50000），我消费 25000 —— 排名应在机器人高分段之后
-        for (long id = RankService.BOT_ID_BASE + 1; id <= RankService.BOT_ID_BASE + 100; id++) {
-            rankService.addConsumptionNow(id, 50);
-        }
+        long botHigh = RankService.BOT_ID_BASE + 498; // 分数比我高，排名应在我前面
         rankService.addConsumptionNow(userId, 25000);
+        rankService.addConsumptionNow(botHigh, 26000);
 
         RankService.MeRank me = rankService.me(userId);
         assertEquals(25000, me.score());
-        assertTrue(me.rank() >= 1 && me.rank() <= 10,
-                "25000分在100个50~50000分的机器人中应进前十（大概率前几名），实际rank=" + me.rank());
+        RankService.MeRank bot = rankService.me(botHigh);
+        assertEquals(26000, bot.score());
+        assertTrue(bot.rank() < me.rank(), "分数高的成员排名必须更靠前（相对断言，容忍榜上已有30万数据）");
+        assertTrue(me.rank() >= 1 && me.totalMembers() >= 100,
+                "排名从1起算且总成员数应统计到位，实际rank=" + me.rank() + " total=" + me.totalMembers());
     }
 }

@@ -61,6 +61,10 @@ order:
   # 扫表兜底轮询间隔（秒）
   close-scan-seconds: ${ORDER_CLOSE_SCAN_SECONDS:60}
 
+sql-trace:
+  # MyBatis 拦截器的慢SQL阈值（毫秒）；压测时可注入 SQL_SLOW_MS=100 观察更多慢查询
+  slow-ms: ${SQL_SLOW_MS:300}
+
 recon:
   # 每日对账时间（凌晨2点）；验收用管理端手动触发接口
   cron: ${RECON_CRON:0 0 2 * * ?}
