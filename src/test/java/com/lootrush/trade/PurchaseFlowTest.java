@@ -50,7 +50,9 @@ class PurchaseFlowTest {
     }
 
     private OrderEntity awaitOrder(String orderNo) throws InterruptedException {
-        for (int i = 0; i < 50; i++) {
+        // 30秒而非10秒：每个测试类各起一个Spring上下文，同组消费者多实例时
+        // RocketMQ 重平衡最长约20秒，期间消息延迟投递（曾致偶发假失败）
+        for (int i = 0; i < 150; i++) {
             OrderEntity o = orderMapper.selectByOrderNo(orderNo);
             if (o != null) {
                 return o;

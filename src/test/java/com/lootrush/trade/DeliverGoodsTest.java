@@ -80,7 +80,8 @@ class DeliverGoodsTest {
     }
 
     private DeliverFlowEntity awaitDeliver(String orderNo) throws InterruptedException {
-        for (int i = 0; i < 50; i++) {
+        // 30秒窗口：容忍多测试上下文下消费者组的重平衡延迟（同 awaitOrder 注释）
+        for (int i = 0; i < 150; i++) {
             DeliverFlowEntity f = deliverFlowMapper.selectByOrderNo(orderNo);
             if (f != null) {
                 return f;
