@@ -13,6 +13,6 @@ public interface GachaPoolMapper {
     @Select("SELECT * FROM gacha_pool ORDER BY id")
     List<GachaPoolEntity> selectAll();
 
-    @Select("SELECT i.name FROM gacha_pool p JOIN item i ON p.item_id = i.id WHERE p.item_id = #{itemId}")
+    @Select("SELECT name FROM item WHERE id = #{itemId}")
     String itemNameOf(@Param("itemId") Long itemId);
 }

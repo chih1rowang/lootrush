@@ -96,6 +96,11 @@ class GachaServiceTest {
         assertTrue(first.nextItemNames() == null || !first.nextItemNames().isEmpty(),
                 "应能给出下期阵容");
         assertEquals(first.periodStart().plusDays(7), first.periodEnd(), "每期7天");
+        // 名字必须全部非空（009D事故：金装移出基础卡池后，名字查询join错表全变null）
+        first.currentItemNames().forEach(n ->
+                assertTrue(n != null && !n.isBlank(), "本期金装名字不得为空"));
+        second.currentItemNames().forEach(n ->
+                assertTrue(n != null && !n.isBlank(), "下期金装名字不得为空"));
     }
 
     @Test
