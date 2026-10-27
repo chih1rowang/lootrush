@@ -129,3 +129,41 @@ CREATE TABLE IF NOT EXISTS `recon_diff` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `uk_type_ref` (`diff_type`, `order_no`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='对账差异登记(同一差异只登记一次)';
+
+-- 循环8：抽卡三件套
+CREATE TABLE IF NOT EXISTS `gacha_pool` (
+  `id`      BIGINT  NOT NULL AUTO_INCREMENT,
+  `item_id` BIGINT  NOT NULL,
+  `rarity`  TINYINT NOT NULL,
+  `weight`  INT     NOT NULL COMMENT '概率=weight/Σweight,对外公示',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_item` (`item_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='卡池';
+
+CREATE TABLE IF NOT EXISTS `gacha_record` (
+  `id`               BIGINT      NOT NULL AUTO_INCREMENT,
+  `user_id`          BIGINT      NOT NULL,
+  `item_id`          BIGINT      NOT NULL,
+  `rarity`           TINYINT     NOT NULL,
+  `pity_count_after` INT         NOT NULL COMMENT '本抽后的保底计数(0=刚出金清零)',
+  `is_pity_hit`      TINYINT     NOT NULL DEFAULT 0 COMMENT '是否硬保底强制出金',
+  `batch_no`         VARCHAR(40) NOT NULL,
+  `create_time`      DATETIME    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_user` (`user_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='抽卡流水(只增不改):概率审计原始账本';
+
+CREATE TABLE IF NOT EXISTS `user_pity` (
+  `user_id`    BIGINT   NOT NULL,
+  `pity_count` INT      NOT NULL DEFAULT 0,
+  `update_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`user_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='保底计数:丢失容忍度=0,落MySQL不落Redis(选型故事)';
+
+-- 卡池种子（幂等：按道具名判重）
+INSERT INTO item(name, rarity, source_type, description) SELECT '星尘碎片',1,'GACHA','最常见的星尘' WHERE NOT EXISTS (SELECT 1 FROM item WHERE name='星尘碎片');
+INSERT INTO item(name, rarity, source_type, description) SELECT '辉光结晶',2,'GACHA','罕见的辉光' WHERE NOT EXISTS (SELECT 1 FROM item WHERE name='辉光结晶');
+INSERT INTO item(name, rarity, source_type, description) SELECT '逐星者之刃',3,'GACHA','传说中的逐星者遗物' WHERE NOT EXISTS (SELECT 1 FROM item WHERE name='逐星者之刃');
+INSERT INTO gacha_pool(item_id, rarity, weight) SELECT i.id, 1, 890 FROM item i WHERE i.name='星尘碎片' AND NOT EXISTS (SELECT 1 FROM gacha_pool p WHERE p.item_id=i.id);
+INSERT INTO gacha_pool(item_id, rarity, weight) SELECT i.id, 2, 100 FROM item i WHERE i.name='辉光结晶' AND NOT EXISTS (SELECT 1 FROM gacha_pool p WHERE p.item_id=i.id);
+INSERT INTO gacha_pool(item_id, rarity, weight) SELECT i.id, 3, 10 FROM item i WHERE i.name='逐星者之刃' AND NOT EXISTS (SELECT 1 FROM gacha_pool p WHERE p.item_id=i.id);
