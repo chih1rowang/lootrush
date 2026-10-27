@@ -1,6 +1,7 @@
 package com.lootrush.gacha;
 
 import com.lootrush.common.BizException;
+import com.lootrush.rank.RankService;
 import com.lootrush.trade.BagMapper;
 import com.lootrush.user.UserMapper;
 import com.lootrush.user.WalletFlowEntity;
@@ -41,16 +42,19 @@ public class GachaService {
     private final UserMapper userMapper;
     private final WalletFlowMapper walletFlowMapper;
     private final BagMapper bagMapper;
+    private final RankService rankService;
 
     public GachaService(GachaPoolMapper poolMapper, GachaRecordMapper recordMapper,
                         UserPityMapper pityMapper, UserMapper userMapper,
-                        WalletFlowMapper walletFlowMapper, BagMapper bagMapper) {
+                        WalletFlowMapper walletFlowMapper, BagMapper bagMapper,
+                        RankService rankService) {
         this.poolMapper = poolMapper;
         this.recordMapper = recordMapper;
         this.pityMapper = pityMapper;
         this.userMapper = userMapper;
         this.walletFlowMapper = walletFlowMapper;
         this.bagMapper = bagMapper;
+        this.rankService = rankService;
     }
 
     /** 单抽结果 */
@@ -106,6 +110,7 @@ public class GachaService {
         pityMapper.update(userId, pity);
 
         writeFlow(userId, cost);
+        rankService.recordAfterCommit(userId, cost); // 抽卡消费计入排行榜（提交后生效）
         log.info("抽卡完成 userId={} count={} cost={} batchNo={}", userId, count, cost, batchNo);
         return new DrawResult(batchNo, cost, userMapper.selectById(userId).getDiamond(), results);
     }

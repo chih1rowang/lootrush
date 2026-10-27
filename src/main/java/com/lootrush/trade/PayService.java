@@ -3,6 +3,7 @@ package com.lootrush.trade;
 import com.lootrush.common.ApiResponse;
 import com.lootrush.common.BizException;
 import com.lootrush.goods.GoodsMapper;
+import com.lootrush.rank.RankService;
 import com.lootrush.user.UserMapper;
 import com.lootrush.user.WalletFlowEntity;
 import com.lootrush.user.WalletFlowMapper;
@@ -46,12 +47,14 @@ public class PayService {
     private final WalletFlowMapper walletFlowMapper;
     private final GoodsMapper goodsMapper;
     private final RocketMQTemplate mqTemplate;
+    private final RankService rankService;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     public PayService(@Value("${pay.secret}") String paySecret,
                       OrderMapper orderMapper, PayNotifyLogMapper notifyMapper,
                       UserMapper userMapper, WalletFlowMapper walletFlowMapper,
-                      GoodsMapper goodsMapper, RocketMQTemplate mqTemplate) {
+                      GoodsMapper goodsMapper, RocketMQTemplate mqTemplate,
+                      RankService rankService) {
         this.paySecret = paySecret;
         this.orderMapper = orderMapper;
         this.notifyMapper = notifyMapper;
@@ -59,6 +62,7 @@ public class PayService {
         this.walletFlowMapper = walletFlowMapper;
         this.goodsMapper = goodsMapper;
         this.mqTemplate = mqTemplate;
+        this.rankService = rankService;
     }
 
     /** 回调请求体（支付公司 POST 过来的） */
@@ -119,6 +123,7 @@ public class PayService {
                 throw BizException.of(400, "钻石余额不足，无法完成支付");
             }
             writeFlow(order.getUserId(), "PURCHASE", -order.getPriceDiamond(), order.getOrderNo());
+            rankService.recordAfterCommit(order.getUserId(), order.getPriceDiamond()); // 消费计分（提交后生效）
             scheduleDeliveryAfterCommit(order);
         }
 
